@@ -1,6 +1,7 @@
 import requests
 import spotipy
 import json
+import time
 from spotipy.oauth2 import SpotifyClientCredentials
 from config import CLIENT_SECRET, CLIENT_ID, SAVE_FILE
 
@@ -37,21 +38,24 @@ def save_data_to_json(data, filename=SAVE_FILE):
         json.dump(data, f, indent=4)
 
 
-def fetch_data(query, spotify, total_limit=1000):
+def fetch_data(query, spotify, total_limit=100):
     data = []
-    limit = 50
+    limit = 20
     for offset in range(0, total_limit, limit):
         try:
+            time.sleep(5)
             results = spotify.search(q=query, type='track', limit=limit, offset=offset)
             tracks = results['tracks']['items']
 
             for track in tracks:
+                time.sleep(1)
                 track_id = track['id']
                 track_name = track['name']
                 artist_name = track['artists'][0]['name']
                 artist_id = track['artists'][0]['id']
                 artist_info = spotify.artist(artist_id)
-                country = get_artist_country(artist_name)
+                track_genre = query
+                country = 'Unknown'  # temporary
                 followers = artist_info['followers']['total']
                 track_popularity = track['popularity']
                 audio_features = spotify.audio_features(track_id)[0]
@@ -59,6 +63,7 @@ def fetch_data(query, spotify, total_limit=1000):
                 track_data = {
                     'track_id': track_id,
                     'track_name': track_name,
+                    'track_genre': track_genre,
                     'artist': artist_name,
                     'followers': followers,
                     'country': country,
@@ -67,14 +72,14 @@ def fetch_data(query, spotify, total_limit=1000):
                     'loudness': audio_features.get('loudness', -60) if audio_features else -60,
                     'key': audio_features.get('key', 0) if audio_features else 0
                 }
-
                 data.append(track_data)
+                all_data.append(track_data)
 
-            save_data_to_json(data)
+            save_data_to_json(all_data)
 
         except Exception as e:
             print(f"Error occurred: {e}")
-            save_data_to_json(data)
+            save_data_to_json(all_data)
             break
 
         if len(tracks) < limit:
@@ -83,14 +88,13 @@ def fetch_data(query, spotify, total_limit=1000):
     return data
 
 
+all_data = []
 if __name__ == "__main__":
     spotify_client = get_spotify_client()
-    all_data = []
     try:
         for genre in ['rock', 'pop', 'jazz', 'hip hop', 'classical']:
             print(f"Starting data collection for genre: {genre}")
             genre_data = fetch_data(genre, spotify_client)
-            all_data.extend(genre_data)
             print(f"Collected {len(genre_data)} records for genre: {genre}")
 
     except Exception as e:
