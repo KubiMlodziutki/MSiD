@@ -3,7 +3,7 @@ import spotipy
 import json
 import time
 from spotipy.oauth2 import SpotifyClientCredentials
-from config import CLIENT_SECRET, CLIENT_ID, SAVE_FILE
+from config import CLIENT_SECRET, CLIENT_ID, SAVE_FILE, GENRES
 
 
 def get_spotify_client():
@@ -38,17 +38,17 @@ def save_data_to_json(data, filename=SAVE_FILE):
         json.dump(data, f, indent=4)
 
 
-def fetch_data(query, spotify, total_limit=100):
+def fetch_data(query, spotify, total_limit=300):
     data = []
-    limit = 20
+    limit = 15
     for offset in range(0, total_limit, limit):
         try:
-            time.sleep(5)
+            time.sleep(32)
             results = spotify.search(q=query, type='track', limit=limit, offset=offset)
             tracks = results['tracks']['items']
 
             for track in tracks:
-                time.sleep(1)
+                time.sleep(5)
                 track_id = track['id']
                 track_name = track['name']
                 artist_name = track['artists'][0]['name']
@@ -92,7 +92,7 @@ all_data = []
 if __name__ == "__main__":
     spotify_client = get_spotify_client()
     try:
-        for genre in ['rock', 'pop', 'jazz', 'hip hop', 'classical']:
+        for genre in GENRES:
             print(f"Starting data collection for genre: {genre}")
             genre_data = fetch_data(genre, spotify_client)
             print(f"Collected {len(genre_data)} records for genre: {genre}")
@@ -102,4 +102,3 @@ if __name__ == "__main__":
 
     finally:
         save_data_to_json(all_data)
-
