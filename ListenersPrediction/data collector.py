@@ -11,6 +11,7 @@ def get_spotify_client():
     return spotipy.Spotify(client_credentials_manager=credentials_manager)
 
 
+# to be used or not to be used
 def get_artist_country(artist_name):
     url = f"https://musicbrainz.org/ws/2/artist/?query={artist_name}&fmt=json"
     try:
